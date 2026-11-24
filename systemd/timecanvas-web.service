@@ -1,0 +1,31 @@
+[Unit]
+Description=TimeCanvas dashboard (FastAPI/Uvicorn, loopback only)
+After=network.target
+RequiresMountsFor=/srv/timecanvas
+# starts even if the camera is offline
+
+[Service]
+User=timecanvas
+Group=timecanvas
+Environment=PYTHONPATH=/opt/timecanvas/app PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/timecanvas/venv/bin/uvicorn timecanvas.web.app:app --host 127.0.0.1 --port 8000 --no-server-header --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=always
+RestartSec=3
+PrivateDevices=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/timecanvas /var/lib/timecanvas /var/log/timecanvas
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+UMask=0027
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

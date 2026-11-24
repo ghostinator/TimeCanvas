@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block body %}
+<h1>Maintenance</h1>
+<p><b>Version</b> {{ commit[0] }}{% if commit|length > 2 %} · commit {{ commit[2] }}{% endif %} · media volume {{ 'mounted' if mounted else 'NOT MOUNTED' }}</p>
+<h3>Storage</h3><p>{{ disk.used|human }} used of {{ disk.total|human }} ({{ disk.free|human }} free)</p>
+<table><tr><th>Type</th><th>Status</th><th>Files</th><th>Size</th></tr>{% for r in by %}<tr><td>{{ r.media_type }}</td><td>{{ r.status }}</td><td>{{ r.n }}</td><td>{{ r.b|human }}</td></tr>{% endfor %}</table>
+<p class="muted">Backups: the rolling frame archive is <b>excluded</b> from Proxmox backups (config, database and kept videos are included). See docs/BACKUP_AND_RESTORE.md.</p>
+<div class="card">
+<a href="/maintenance?retention=1">Retention dry run</a> ·
+<form method="post" action="/maintenance/reconcile" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button>Reconcile index with disk</button></form>
+<form method="post" action="/maintenance/thumbs" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button>Regenerate thumbnails</button></form>
+<a href="/maintenance/config.toml">Export config</a> · <a href="/maintenance/diagnostics.txt">Diagnostic bundle</a></div>
+{% if plan is not none %}<h3>Retention dry run: {{ plan|length }} item(s) would be deleted</h3><pre>{% for p in plan[:200] %}{{ p[1] }}  ({{ p[2] }})
+{% endfor %}</pre>{% endif %}
+<h3>Logs</h3><p>{% for u in ["ustreamer","capture","render","web","health","cleanup","archive"] %}<a href="/maintenance?unit={{ u }}">{{ u }}</a> {% endfor %}</p>{% if log %}<pre>{{ log }}</pre>{% endif %}
+<h3>Recent audit events</h3><table>{% for a in audits %}<tr><td>{{ a.ts|replace("T"," ") }}</td><td>{{ a.actor }}</td><td>{{ a.action }}</td><td>{{ a.detail }}{% if a.n > 1 %} <span class="muted">and {{ a.n - 1 }} more like it</span>{% endif %}</td></tr>{% endfor %}</table>
+{% endblock %}

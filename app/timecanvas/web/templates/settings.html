@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block body %}
+<h1>Settings</h1>
+<form method="post" action="/settings" class="card"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label><input type="checkbox" name="capture_enabled" {{ 'checked' if v.capture_enabled=='1' }}> capture enabled</label>
+{% for k,(lo,hi) in rules.items() %}<label>{{ k.replace('_',' ') }} ({{ lo }}–{{ hi }}) <input type="number" name="{{ k }}" value="{{ v[k] }}" min="{{ lo }}" max="{{ hi }}" required></label>{% endfor %}
+<label>render preset <select name="render_preset">{% for p in presets %}<option {{ 'selected' if p==v.render_preset }}>{{ p }}</option>{% endfor %}</select></label>
+<label>timezone <input name="timezone" value="{{ v.timezone }}" required></label><button>Save</button></form>
+<p class="muted">Camera resolution, frame rate and image controls are on the <a href="/camera">Camera</a> tab.</p>
+{% endblock %}

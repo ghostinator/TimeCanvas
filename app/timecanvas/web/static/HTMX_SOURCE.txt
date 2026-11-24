@@ -1,0 +1,1 @@
+htmx 2.0.4 vendored from cdn.jsdelivr.net/npm/htmx.org@2.0.4 (BSD-0)

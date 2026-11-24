@@ -1,0 +1,21 @@
+[Unit]
+Description=TimeCanvas privileged helper (one request)
+
+[Service]
+# The only sanctioned root process. Accepts one JSON line from the socket; allowlist lives in scripts/helper.py.
+ExecStart=/usr/bin/python3 /opt/timecanvas/scripts/helper.py
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+TimeoutStartSec=90
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/etc/timecanvas
+ProtectHome=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_CHOWN CAP_FOWNER
+UMask=0077

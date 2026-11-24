@@ -1,0 +1,10 @@
+[Unit]
+Description=Monthly render, 1st 00:45 America/Denver
+
+[Timer]
+OnCalendar=*-*-01 00:45:00 America/Denver
+Persistent=true
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

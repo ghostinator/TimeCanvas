@@ -1,0 +1,10 @@
+[Unit]
+Description=TimeCanvas capture tick (every 5 s; the slot logic enforces the configured interval)
+
+[Timer]
+OnBootSec=20s
+OnUnitInactiveSec=5s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

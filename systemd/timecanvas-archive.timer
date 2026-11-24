@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly archive to OneDrive at 02:30 America/Denver (before the 03:30 cleanup)
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 America/Denver
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

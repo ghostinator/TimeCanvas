@@ -1,0 +1,44 @@
+#cloud-config
+# Rendered by create-vm.sh: @SSH_PUBKEY@ is replaced with the admin's PUBLIC key. No secrets here.
+hostname: timecanvas
+manage_etc_hosts: true
+timezone: America/Denver
+users:
+  - name: brandon
+    gecos: Brandon (admin)
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"   # key-only account, no password set; tighten later if desired
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @SSH_PUBKEY@
+ssh_pwauth: false
+package_update: true
+packages: [qemu-guest-agent]
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-timecanvas.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin no
+      KbdInteractiveAuthentication no
+  - path: /usr/local/sbin/timecanvas-media-disk
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      # Idempotent: format the 2nd disk (scsi1) ext4 if blank, mount by UUID at /srv/timecanvas.
+      set -eu
+      DEV=/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
+      [ -b "$DEV" ] || { echo "media disk missing" >&2; exit 1; }
+      if ! blkid "$DEV" >/dev/null 2>&1; then
+        [ -z "$(lsblk -n -o PTTYPE "$DEV" | tr -d ' \n')" ] || { echo "disk has partition table; refusing" >&2; exit 1; }
+        mkfs.ext4 -L timecanvas-media "$DEV"
+      fi
+      UUID=$(blkid -s UUID -o value "$DEV")
+      mkdir -p /srv/timecanvas
+      grep -q "UUID=$UUID" /etc/fstab || echo "UUID=$UUID /srv/timecanvas ext4 defaults,noatime,nofail 0 2" >> /etc/fstab
+      systemctl daemon-reload
+      mountpoint -q /srv/timecanvas || mount /srv/timecanvas
+runcmd:
+  - [systemctl, enable, --now, qemu-guest-agent]
+  - [systemctl, restart, ssh]
+  - [/usr/local/sbin/timecanvas-media-disk]

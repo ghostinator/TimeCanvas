@@ -1,0 +1,39 @@
+[Unit]
+Description=TimeCanvas ustreamer (sole opener of the camera)
+Wants=timecanvas-camera-init.service
+After=timecanvas-camera-init.service
+StartLimitIntervalSec=0
+
+[Service]
+User=timecanvas
+Group=timecanvas
+# MJPEG passthrough (-c HW), loopback only; ustreamer retries the device itself after unplug/replug.
+# Mode defaults below; /etc/timecanvas/camera-mode.env (written only by the root helper, validated against the camera's mode list) overrides.
+Environment=TC_RES=1920x1080 TC_FPS=30
+EnvironmentFile=-/etc/timecanvas/camera-mode.env
+ExecStartPre=-/opt/timecanvas/scripts/camera-init.sh
+ExecStart=/usr/bin/ustreamer --device=/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0 \
+  --format=MJPEG --encoder=HW --resolution=${TC_RES} --desired-fps=${TC_FPS} --host=127.0.0.1 --port=8080 \
+  --device-timeout=2 --device-error-delay=2
+Restart=always
+RestartSec=2
+RestartSteps=5
+RestartMaxDelaySec=30
+DevicePolicy=closed
+DeviceAllow=char-video4linux rw
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+UMask=0027
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

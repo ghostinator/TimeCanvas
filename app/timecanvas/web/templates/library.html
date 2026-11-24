@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block body %}
+{% macro pager() %}<nav class="pager"><form method="get" action="/library"><input type="hidden" name="day" value="{{ d }}"><input type="hidden" name="fsort" value="{{ fsort }}"><input type="hidden" name="fdir" value="{{ fdir }}"><input type="hidden" name="tfrom" value="{{ tfrom }}"><input type="hidden" name="tto" value="{{ tto }}"><input type="hidden" name="fpinned" value="{{ fpinned }}"><label>Per page <select name="per_page" data-autosubmit>{% for n in per_pages %}<option{{ ' selected' if n == per_page }}>{{ n }}</option>{% endfor %}</select></label></form>
+{% if pages > 1 %}{% set u = '/library?day=%s&per_page=%d&fsort=%s&fdir=%s&tfrom=%s&tto=%s&fpinned=%d&page_no=' % (d, per_page, fsort, fdir, tfrom, tto, fpinned) %}{% if page_no > 1 %}<a href="{{ u }}1">« first</a><a href="{{ u }}{{ page_no-1 }}">‹ prev</a>{% endif %}
+{% for n in range([page_no-3,1]|max, [page_no+3,pages]|min + 1) %}{% if n == page_no %}<b>{{ n }}</b>{% else %}<a href="{{ u }}{{ n }}">{{ n }}</a>{% endif %}{% endfor %}
+{% if page_no < pages %}<a href="{{ u }}{{ page_no+1 }}">next ›</a><a href="{{ u }}{{ pages }}">last »</a>{% endif %}<span class="muted">page {{ page_no }} of {{ pages }}</span>{% endif %}</nav>{% endmacro %}
+<h1>Library</h1>
+
+<form method="post" action="/library/bulk" id="bulk"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="confirm" value="">
+<div class="toolbar"><label><input type="checkbox" id="selall"> select all on page</label> <span id="selcount" class="muted">0 selected</span>
+<button name="action" value="pin">Pin</button><button name="action" value="unpin">Unpin</button><button name="action" value="zip">Download zip</button>
+<button name="action" value="delete" class="danger" data-confirm="Permanently delete the selected items? Pinned items and frames in active renders are skipped.">Delete</button>
+<a href="/storage?month={{ d.strftime('%Y-%m') }}">Storage by day / delete range →</a></div></form>
+<p class="muted hint">Shift-click selects a range. Arrow keys move, Space selects, Enter opens, Esc clears, Ctrl/Cmd+A selects the page.</p>
+{% if tab == 'frames' %}
+<div class="cols"><section><h3><a href="/library?month={{ prev_m }}&per_page={{ per_page }}">‹</a> {{ mo.strftime("%B %Y") }} <a href="/library?month={{ next_m }}&per_page={{ per_page }}">›</a></h3>
+<table class="cal"><tr>{% for w in ["Mo","Tu","We","Th","Fr","Sa","Su"] %}<th>{{ w }}</th>{% endfor %}</tr><tr>
+{% for i in range(first_wd) %}<td></td>{% endfor %}
+{% for dd, n in counts.items() %}{% if (dd + first_wd - 1) % 7 == 0 and dd > 1 %}</tr><tr>{% endif %}<td class="{{ 'sel' if dd == d.day and mo.month == d.month }}"><a href="/library?day={{ mo.strftime('%Y-%m') }}-{{ '%02d' % dd }}&per_page={{ per_page }}">{{ dd }}</a><br><small>{{ n or '' }}</small></td>{% endfor %}</tr></table></section>
+<section><h3>{{ d }} — {{ total }} frames</h3>
+<form method="get" action="/library" class="filters"><input type="hidden" name="day" value="{{ d }}"><input type="hidden" name="per_page" value="{{ per_page }}">
+<label>From <input type="time" name="tfrom" value="{{ tfrom }}"></label><label>To <input type="time" name="tto" value="{{ tto }}"></label>
+<label>Sort <select name="fsort"><option value="time" {{ 'selected' if fsort == 'time' }}>time</option><option value="size" {{ 'selected' if fsort == 'size' }}>size</option></select></label>
+<label><select name="fdir"><option value="asc" {{ 'selected' if fdir == 'asc' }}>ascending</option><option value="desc" {{ 'selected' if fdir == 'desc' }}>descending</option></select></label>
+<label><input type="checkbox" name="fpinned" value="1" {{ 'checked' if fpinned }}> pinned only</label><button>Apply</button><a href="/library?day={{ d }}">reset</a>
+<a href="/play?start={{ d }}T{{ tfrom or '00:00' }}&end={{ d }}T{{ tto or '23:59' }}">▶ play this</a></form>
+<div class="strip" role="group" aria-label="Frames captured per hour"><span class="muted">Captured per hour</span><div class="hrs">{% for x in strip %}<a href="/library?day={{ d }}&per_page={{ per_page }}&tfrom={{ '%02d:00' % x.h }}{% if x.h < 23 %}&tto={{ '%02d:00' % (x.h + 1) }}{% endif %}" class="{{ 'gap' if not x.n }}" style="--d:{{ x.d }}" title="{{ '%02d:00' % x.h }}: {{ x.n }} frame{{ 's' if x.n != 1 }}"><i></i></a>{% endfor %}</div><div class="ticks"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>
+{{ pager() }}
+<div class="thumbs">{% for r in rows %}<figure><label class="pick"><input type="checkbox" form="bulk" name="ids" value="{{ r.id }}"><a href="/media/{{ r.id }}/file" data-lb="image" data-cap="{{ r.ts_utc|local(tz) }}"><img loading="lazy" src="/media/{{ r.id }}/thumb" alt="frame"></a></label><figcaption>{{ r.ts_utc|local(tz) }} {% if r.pinned %}📌{% endif %}<br>{{ r.width }}×{{ r.height }} · {{ r.size_bytes|human }} · <a href="/media/{{ r.id }}/file?dl=1">download</a></figcaption></figure>{% else %}<p class="muted">No frames match.</p>{% endfor %}</div>
+{{ pager() }}
+</section></div>
+{% else %}
+{% macro vh(key, label) %}<th><a href="/library?tab=videos&vsort={{ key }}&vdir={{ 'asc' if vsort == key and vdir == 'desc' else 'desc' }}&day={{ d }}&q={{ q|urlencode }}&fpinned={{ fpinned }}">{{ label }}{% if vsort == key %} {{ '▲' if vdir == 'asc' else '▼' }}{% endif %}</a></th>{% endmacro %}
+<form method="get" action="/library" class="filters"><input type="hidden" name="tab" value="videos"><input type="hidden" name="vsort" value="{{ vsort }}"><input type="hidden" name="vdir" value="{{ vdir }}">
+<label>Name contains <input name="q" value="{{ q }}" maxlength="100"></label><label><input type="checkbox" name="fpinned" value="1" {{ 'checked' if fpinned }}> pinned only</label><button>Apply</button><a href="/library?tab=videos">reset</a></form>
+<table class="vids"><tr><th></th><th></th>{{ vh('name','Name') }}{{ vh('date','Date') }}{{ vh('duration','Duration') }}{{ vh('size','Size') }}<th></th></tr>
+{% for v in vids %}<tr><td><input type="checkbox" form="bulk" name="ids" value="{{ v.id }}"></td><td><a href="/media/{{ v.id }}/file" data-lb="{{ 'image' if v.path.endswith('.webp') else 'video' }}" data-cap="{{ v.path.split('/')[-1] }}"><img loading="lazy" src="/media/{{ v.id }}/thumb" alt="" width="96"></a></td>
+<td>{{ v.path.split('/')[-1] }} {% if v.pinned %}📌{% endif %}<br><small class="muted">{{ v.width }}×{{ v.height }}</small></td><td>{{ v.ts_utc|local(tz) }}</td>
+<td>{% if v.duration %}{{ '%d:%02d' % (v.duration // 60, v.duration % 60) }}{% else %}-{% endif %}</td><td>{{ v.size_bytes|human }}</td><td><a href="/media/{{ v.id }}/file?dl=1">download</a></td></tr>
+{% else %}<tr><td colspan="7" class="muted">No videos match.</td></tr>{% endfor %}</table>
+{% endif %}
+<script src="/static/library.js"></script>
+{% endblock %}

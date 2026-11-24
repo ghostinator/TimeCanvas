@@ -1,0 +1,15 @@
+<div id="ctrls" hx-get="/partials/camera-controls" hx-trigger="ctrls-changed from:body" hx-swap="outerHTML">
+{% if ok %}
+<table class="ctrls">
+{% for c in ctrls if not c.readonly %}
+<tr class="{{ 'inactive' if c.inactive }}"><td><label for="c-{{ c.name }}">{{ c.name.replace('_',' ') }}</label>{% if c.inactive %}<br><small class="muted">inactive (auto mode on)</small>{% endif %}</td>
+<td><form hx-post="/camera/set" hx-trigger="change" hx-target="#st-{{ c.name }}" hx-swap="innerHTML"><input type="hidden" name="name" value="{{ c.name }}">
+{% if c.type == 'menu' %}<select id="c-{{ c.name }}" name="value" {{ 'disabled' if c.inactive }}>{% for v,label in c.menu %}<option value="{{ v }}" {{ 'selected' if v|string == c.value }}>{{ label }}</option>{% endfor %}</select>
+{% elif c.type == 'bool' %}<select id="c-{{ c.name }}" name="value" {{ 'disabled' if c.inactive }}><option value="0" {{ 'selected' if c.value=='0' }}>Off</option><option value="1" {{ 'selected' if c.value=='1' }}>On</option></select>
+{% else %}<input id="c-{{ c.name }}" type="range" name="value" min="{{ c.min }}" max="{{ c.max }}" step="{{ c.step or 1 }}" value="{{ c.value }}" {{ 'disabled' if c.inactive }}><output>{{ c.value }}</output>{% endif %}
+<span id="st-{{ c.name }}" class="st"></span></form></td><td><small class="muted">default {{ c.default }}</small></td></tr>
+{% endfor %}</table>
+<form hx-post="/camera/reset" hx-target="#reset-status" hx-swap="innerHTML" hx-confirm="Reset all camera controls to their defaults?"><button>Reset all to defaults</button> <span id="reset-status" class="st"></span></form>
+<p class="muted">Changes apply instantly and are remembered across reboots and replugs.</p>
+{% else %}<p class="crit">{{ info }}</p>{% endif %}
+</div>

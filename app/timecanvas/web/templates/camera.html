@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block body %}
+<h1>Camera</h1>
+<div class="camgrid">
+<div>
+<div class="live"><img id="preview" src="/live/stream" alt="Live preview"></div>
+<p><a href="/live" data-lb="stream" data-cap="Live view">Open large live view</a> · <a href="/camera/test-frame" target="_blank">test frame</a> · stream: {% if state %}{{ 'online' if state.source.online else 'OFFLINE' }}, {{ state.source.captured_fps }} fps, {{ state.source.resolution.width }}×{{ state.source.resolution.height }}{% else %}streamer unreachable{% endif %}</p>
+<form class="card" hx-post="/camera/mode" hx-trigger="change" hx-target="#mode-status" hx-swap="innerHTML" hx-indicator="#mode-spin">
+<label>Resolution &amp; frame rate (MJPEG) <select name="mode">{% for w,h,f in modes %}<option value="{{ w }}x{{ h }}x{{ f }}" {{ 'selected' if cur_res == (w|string ~ 'x' ~ h|string) and cur_fps|string == f|string }}>{{ w }}×{{ h }} @ {{ f }} fps</option>{% endfor %}</select></label>
+<span id="mode-spin" class="htmx-indicator">restarting stream…</span> <span id="mode-status" class="st"></span>
+<small class="muted">The stream restarts for a few seconds. If a mode does not deliver frames it is reverted automatically. Verified stable on this cabling: 1080p @ 30.</small></form>
+<form method="post" action="/camera/restart" hx-boost="true" hx-confirm="Restart camera init + streamer? The live feed drops for a few seconds."><input type="hidden" name="csrf" value="{{ csrf }}"><button>Rescan / re-init camera</button></form>
+</div>
+<div>{% include "_ctrls.html" %}
+<h3>Profiles</h3>
+<form method="post" action="/camera/profile" class="card"><input type="hidden" name="csrf" value="{{ csrf }}"><label>Save current values as <input name="pname" required pattern="[\w .\-]{1,40}"></label><button>Save profile</button></form>
+{% for p in profiles %}<form method="post" action="/camera/profile/apply" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="pname" value="{{ p.name }}"><button>Apply “{{ p.name }}”</button></form> {% endfor %}
+<details><summary>Raw formats/controls</summary><pre>{{ info }}</pre></details></div>
+</div>
+<script src="/static/camera.js"></script>
+{% endblock %}

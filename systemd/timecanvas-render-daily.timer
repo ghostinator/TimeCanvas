@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily render at 00:15 America/Denver (previous local day)
+
+[Timer]
+OnCalendar=*-*-* 00:15:00 America/Denver
+Persistent=true
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

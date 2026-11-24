@@ -1,0 +1,27 @@
+[Unit]
+Description=TimeCanvas capture tick (captures only when a slot is due)
+RequiresMountsFor=/srv/timecanvas
+
+[Service]
+Type=oneshot
+User=timecanvas
+Group=timecanvas
+Environment=PYTHONPATH=/opt/timecanvas/app PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m timecanvas capture
+RuntimeDirectory=timecanvas
+RuntimeDirectoryPreserve=yes
+# no camera device access: frames come from ustreamer over loopback
+PrivateDevices=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/timecanvas /var/lib/timecanvas /var/log/timecanvas
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+UMask=0027
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallFilter=@system-service
+SuccessExitStatus=2 3

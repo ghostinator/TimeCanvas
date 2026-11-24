@@ -1,0 +1,6 @@
+<table><tr><th>#</th><th>Kind</th><th>Range ({{ tz }})</th><th>Status</th><th>Progress</th><th></th></tr>
+{% for j in jobs %}<tr><td>{{ j.id }}</td><td>{{ j.kind }}</td><td><small>{{ j.range_start_utc|local(tz) }} → {{ j.range_end_utc|local(tz) }}</small></td><td class="{{ 'ok' if j.status=='done' else 'crit' if j.status in ('failed',) else '' }}">{{ j.status }}{% if j.error and j.status!='done' %}<br><small>{{ j.error }}</small>{% endif %}</td>
+<td>{% if j.status in ('running','queued') %}<progress value="{{ j.progress }}" max="1"></progress>{% elif j.status=='done' %}100%{% endif %}</td>
+<td>{% if j.status in ('queued','running') %}<form method="post" action="/renders/{{ j.id }}/cancel" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button>Cancel</button></form>{% endif %}
+{% if j.status in ('failed','cancelled') %}<form method="post" action="/renders/{{ j.id }}/retry" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button>Retry</button></form>{% endif %}
+<a href="/renders?edit={{ j.id }}">Edit</a> {% if j.status=='done' and j.output_media_id %}<a href="/media/{{ j.output_media_id }}/file?dl=1">Download</a>{% endif %}</td></tr>{% endfor %}</table>

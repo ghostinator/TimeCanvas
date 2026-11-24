@@ -1,0 +1,11 @@
+# Backup and restore
+Git is the source of truth for code, units, nginx template, infra scripts.
+**What is backed up**
+- `timecanvas-backup.timer` (04:00) -> `/var/backups/timecanvas/*.tar.gz` (root, 0700, last 14): `/etc/timecanvas` (config, profiles, **TLS key and htpasswd**), SQLite DB via the online backup API (integrity-checked), VERSION, `pinned-videos.txt`. It lives on the OS disk, which Proxmox backs up with the VM.
+- Proxmox backup of VM 102 covers the OS disk. The **media disk (scsi1) is excluded** (`backup=0`) until the archive size and backup window are known; the Maintenance page says so. Rendered videos worth keeping: pin them, then copy: `ssh brandon@<vm-lan-ip> 'sudo cat /var/backups/timecanvas/...'` is not needed; use `rsync -a --files-from=<(pinned list) brandon@<vm-lan-ip>:/ ~/timecanvas-videos/` (read access via the `timecanvas` group or sudo rsync).
+**Restore test (non-destructive):** `sudo sh /opt/timecanvas/scripts/restore.sh <tarball>` extracts to a scratch dir and runs `PRAGMA integrity_check`.
+**Restore in place:** stop `timecanvas-*` services, `restore.sh <tarball> --target /tmp/r`, copy `/tmp/r/etc/timecanvas` and `/tmp/r/var/lib/timecanvas/timecanvas.db` into place (owner `root:timecanvas` / `timecanvas`), start services, run reconcile.
+**Rebuild from a tag:** new VM via INSTALL steps 2-3, baseline, `scripts/deploy.sh vX.Y.Z`, then restore config + DB.
+
+**Off-VM copy (OneDrive):** the nightly archive uploads each finished day as a zip and every video, size-verified (docs/ARCHIVE.md). To restore frames, download the zip from OneDrive and unzip it; the file names are the originals. The index entries are not recreated automatically: copy the files into `/srv/timecanvas/images/YYYY/MM/DD/` and run `python3 -m timecanvas reconcile`.
+**Not in any backup:** `/var/lib/timecanvas/rclone.conf` (the OneDrive token) and `/var/lib/timecanvas/alerts.json` (Teams webhook, Postal API key, mail password, heartbeat URL) on purpose; re-enter the alert secrets on Settings > Alerts after a rebuild. After a rebuild, run `scripts/archive-setup.sh` again. The config backup *does* contain the TLS key and htpasswd, so keep `/var/backups/timecanvas` at 0700 and treat copies as secrets; the Tailscale cert is re-issued by the timer anyway.

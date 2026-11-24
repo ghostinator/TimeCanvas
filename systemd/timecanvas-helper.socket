@@ -1,0 +1,13 @@
+[Unit]
+Description=TimeCanvas privileged helper socket (fixed allowlist of actions)
+
+[Socket]
+ListenStream=/run/timecanvas-helper.sock
+SocketMode=0660
+SocketUser=root
+SocketGroup=timecanvas
+Accept=yes
+MaxConnections=4
+
+[Install]
+WantedBy=sockets.target

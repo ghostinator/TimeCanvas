@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly render, Monday 00:30 America/Denver
+
+[Timer]
+OnCalendar=Mon *-*-* 00:30:00 America/Denver
+Persistent=true
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

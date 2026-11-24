@@ -1,0 +1,31 @@
+[Unit]
+Description=TimeCanvas archive: upload finished days and videos to OneDrive (rclone)
+RequiresMountsFor=/srv/timecanvas
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=timecanvas
+Group=timecanvas
+Environment=PYTHONPATH=/opt/timecanvas/app PYTHONDONTWRITEBYTECODE=1 XDG_CACHE_HOME=/var/lib/timecanvas/cache
+ExecStart=/usr/bin/python3 -m timecanvas archive
+Nice=10
+IOSchedulingClass=idle
+PrivateDevices=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/timecanvas /var/lib/timecanvas /var/log/timecanvas
+RuntimeDirectory=timecanvas
+RuntimeDirectoryPreserve=yes
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+UMask=0027
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+TimeoutStartSec=6h
+SuccessExitStatus=75

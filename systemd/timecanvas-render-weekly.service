@@ -1,0 +1,27 @@
+[Unit]
+Description=TimeCanvas enqueue weekly render
+RequiresMountsFor=/srv/timecanvas
+
+
+[Service]
+Type=oneshot
+User=timecanvas
+Group=timecanvas
+Environment=PYTHONPATH=/opt/timecanvas/app PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m timecanvas render-weekly
+PrivateDevices=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/timecanvas /var/lib/timecanvas /var/log/timecanvas
+RuntimeDirectory=timecanvas
+RuntimeDirectoryPreserve=yes
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+UMask=0027
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallFilter=@system-service
+

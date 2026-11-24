@@ -1,0 +1,6 @@
+<div class="card col">
+<p><b>{{ n }}</b> item(s), {{ size|human }} would be deleted{% if sample %} (e.g. {{ sample|join(', ') }}){% endif %}.
+{% if pinned %}<br>{{ pinned }} pinned/protected item(s) will be kept.{% endif %}{% if busy %}<br>{{ busy }} frame(s) in active renders will be kept.{% endif %}</p>
+{% if n %}<form method="post" action="/storage/range-delete" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}">
+<input type="hidden" name="from" value="{{ q['from'] }}"><input type="hidden" name="to" value="{{ q['to'] }}"><input type="hidden" name="type" value="{{ q.get('type','frames') }}"><input type="hidden" name="confirm" value="">
+<button class="danger" data-confirm="Permanently delete these {{ n }} item(s) ({{ size|human }})?">Delete {{ n }} item(s)</button></form>{% endif %}</div>

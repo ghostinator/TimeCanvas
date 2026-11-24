@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="htmx-config" content='{"allowEval":false,"selfRequestsOnly":true}'>
+<title>TimeCanvas</title>
+<link rel="stylesheet" href="/static/tc.css">
+<script src="/static/htmx.min.js"></script></head>
+<body hx-headers='{"X-CSRF-Token": "{{ csrf }}"}'>
+<header><a class="brand" href="/">TimeCanvas</a>
+{% set path = request.url.path %}{% set tabq = request.query_params.get("tab") %}
+{% set sect = "library" if path in ("/library", "/play") else "settings" if path in ("/settings", "/camera", "/storage", "/archive", "/alerts", "/maintenance") else path %}
+<nav aria-label="Main">{% for href,label,key in [("/","Overview","/"),("/library","Library","library"),("/renders","Renders","/renders"),("/sessions","Sessions","/sessions"),("/settings","Settings","settings")] %}<a href="{{ href }}"{% if sect == key %} class="on" aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav></header>
+<main class="{{ 'wide' if sect in ('library', '/') or path == '/live' }}">{% if sect == "library" %}<nav class="tabs" aria-label="Library">{% for href,label,on in [("/library","Frames",path == "/library" and tabq != "videos"),("/library?tab=videos","Videos",path == "/library" and tabq == "videos"),("/play","Play",path == "/play")] %}<a href="{{ href }}"{% if on %} class="on" aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+{% elif sect == "settings" %}<nav class="tabs" aria-label="Settings">{% for href,label in [("/settings","General"),("/camera","Camera"),("/storage","Storage"),("/archive","Archive"),("/alerts","Alerts"),("/maintenance","Maintenance")] %}<a href="{{ href }}"{% if path == href %} class="on" aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>{% endif %}
+{% if msg %}<p class="flash">{{ msg }}</p>{% endif %}{% block body %}{% endblock %}</main>
+<footer>TimeCanvas {{ version.split()[0] if version else "dev" }}{% if version and version.split()|length > 2 %} · {{ version.split()[2] }}{% endif %} · signed in as {{ user }}</footer>
+<script src="/static/lightbox.js"></script></body></html>

@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block body %}
+<h1>Sessions</h1><p class="muted">Times are {{ tz }}. An active session overrides the capture interval and may limit capture to days/hours.</p>
+{% if ed %}<p class="flash">Editing session "{{ ed.name }}". <a href="/sessions">Cancel editing</a></p>{% endif %}
+{% set e = ed or {} %}
+<form method="post" action="/sessions" class="card"><input type="hidden" name="csrf" value="{{ csrf }}">{% if ed %}<input type="hidden" name="edit_id" value="{{ ed.id }}">{% endif %}
+<label>Name <input name="name" required maxlength="80" value="{{ e.name or '' }}"></label><label>Start <input type="datetime-local" name="start" required value="{{ e.start or '' }}"></label><label>End <input type="datetime-local" name="end" value="{{ e.end or '' }}"></label>
+<label>Interval s (10-3600) <input type="number" name="interval" min="10" max="3600" value="{{ e.interval or '' }}"></label><label>Days (0=Mon..6=Sun, comma) <input name="days" placeholder="0,1,2,3,4" value="{{ e.days or '' }}"></label><label>Hours start,end <input name="hours" placeholder="8,17" value="{{ e.hours or '' }}"></label><button>{{ 'Save changes' if ed else 'Create' }}</button></form>
+<table><tr><th>Name</th><th>Start (UTC)</th><th>End</th><th>Interval</th><th>Schedule</th><th>Frames</th><th></th></tr>
+{% for s,n in rows %}<tr><td>{{ s.name }}</td><td>{{ s.start_utc[:16] }}</td><td>{{ (s.end_utc or 'open')[:16] }}</td><td>{{ s.interval_seconds or 'default' }}</td><td>{{ s.schedule_json or '-' }}</td><td>{{ n }}</td>
+<td><a href="/sessions?edit={{ s.id }}">Edit</a> <form method="post" action="/sessions/{{ s.id }}/delete" class="inline" hx-boost="true" hx-confirm="Delete this session? Media is kept."><input type="hidden" name="csrf" value="{{ csrf }}"><button class="danger">Delete</button></form></td></tr>{% endfor %}</table>
+{% endblock %}

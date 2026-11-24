@@ -1,0 +1,28 @@
+# TimeCanvas example config. Copy to /etc/timecanvas/config.toml (deploy does this once). No secrets here.
+timezone = "America/Denver"
+
+[camera]
+device = "/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._H264_USB_Camera_SN0001-video-index0"
+width = 1920     # informational/fallback; capture trusts the streamer-reported size
+height = 1080
+fps = 30
+power_line_frequency = 2   # 1=50Hz 2=60Hz
+streamer_url = "http://127.0.0.1:8080"
+
+[capture]
+interval_seconds = 30      # allowed 10..3600
+http_timeout_seconds = 5
+max_frame_age_seconds = 5
+
+[storage]
+root = "/srv/timecanvas"
+db = "/var/lib/timecanvas/timecanvas.db"
+frame_retention_days = 30
+video_retention_days = 365
+disk_warning_percent = 80
+disk_critical_percent = 90
+
+[render]
+fps = 30
+crf = 23
+preset = "medium"

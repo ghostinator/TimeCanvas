@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block body %}
+<div class="bigbar"><h1>Live</h1><span>{% if state %}{{ 'online' if state.source.online else 'OFFLINE' }} · {{ state.source.resolution.width }}×{{ state.source.resolution.height }} · {{ state.source.captured_fps }} fps{% else %}streamer unreachable{% endif %}</span>
+<button id="fs" type="button">Fullscreen (f)</button> <a href="/camera">Camera settings</a></div>
+<div class="live big"><img id="preview" src="/live/stream" alt="Live camera feed"></div>
+<script src="/static/camera.js"></script>
+{% endblock %}

@@ -1,0 +1,48 @@
+# media / data
+*.jpg
+*.jpeg
+!docs/images/*.jpg
+*.mp4
+*.webm
+thumbnails/
+exports/
+spool/
+tmp/
+lost-and-found/
+*.db
+*.db-wal
+*.db-shm
+*.db.bak
+*.sqlite*
+# auth / secrets
+htpasswd*
+.htpasswd
+*.key
+*.pem
+*.crt
+*.p12
+.env
+.env.*
+/config/config.toml
+/config/*.local.toml
+*.token
+*.credentials
+*.secret
+# ssh / vault
+id_*
+*.ppk
+ssh_config*
+*bitwarden*
+# python / build
+.venv/
+venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.egg-info/
+# diagnostics
+diag-*/
+diagnostic-bundle*
+.playwright-mcp/
+.claude/

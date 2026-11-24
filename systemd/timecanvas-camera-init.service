@@ -1,0 +1,27 @@
+[Unit]
+Description=TimeCanvas camera init (apply V4L2 controls)
+After=systemd-udev-settle.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=timecanvas
+Group=timecanvas
+ExecStart=/opt/timecanvas/scripts/camera-init.sh
+# only this unit and ustreamer may touch the camera
+DevicePolicy=closed
+DeviceAllow=char-video4linux rw
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+UMask=0027
+RestrictAddressFamilies=AF_UNIX
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

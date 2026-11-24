@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block body %}
+<h1>Storage</h1>
+<h3><a href="/storage?month={{ prev_m }}">‹</a> {{ mo.strftime("%B %Y") }} <a href="/storage?month={{ next_m }}">›</a> — {{ tot.frames }} frames, {{ tot.bytes|human }}{% if tot.pinned %}, {{ tot.pinned }} pinned{% endif %}</h3>
+<table class="days"><tr><th>Day ({{ tz }})</th><th>Frames</th><th>Size</th><th>Pinned</th><th>Videos</th><th>Actions</th></tr>
+{% for x in days if x.frames or x.videos %}<tr><td><a href="/library?day={{ x.day }}">{{ x.day }}</a></td><td>{{ x.frames }}</td><td>{{ x.bytes|human }}</td><td>{{ x.pinned or '' }}</td><td>{{ x.videos or '' }}</td>
+<td>{% if x.frames %}
+<form method="post" action="/storage/day" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="day" value="{{ x.day }}"><input type="hidden" name="confirm" value="">
+<button name="action" value="pin">Pin day</button><button name="action" value="unpin">Unpin</button><button name="action" value="zip">Zip</button>
+<button name="action" value="delete" class="danger" data-confirm="Delete all UNPINNED frames of {{ x.day }} ({{ x.frames - x.pinned }} frames, cannot be undone)?">Delete unpinned</button>
+<a href="/renders?start={{ x.day }}">Render</a></form>{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="muted">Nothing stored this month.</td></tr>{% endfor %}</table>
+<p class="muted">{{ days|selectattr("frames","equalto",0)|selectattr("videos","equalto",0)|list|length }} days this month have no frames or videos.</p>
+<h2>Delete a range</h2>
+<p class="muted">Pinned items, frames inside queued/running renders, and anything outside the media folders are never deleted. You'll see exactly what will go before confirming.</p>
+<form class="card" hx-get="/storage/range-preview" hx-target="#range-preview" hx-swap="innerHTML">
+<label>From <input type="date" name="from" required></label><label>To <input type="date" name="to" required></label>
+<label>What <select name="type"><option value="frames">frames</option><option value="videos">videos</option><option value="both">both</option></select></label><button>Preview</button></form>
+<div id="range-preview"></div>
+<script src="/static/library.js"></script>
+{% endblock %}

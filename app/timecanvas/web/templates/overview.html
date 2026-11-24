@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block body %}
+<h1>Overview</h1>
+<div class="live"><a href="/live" data-lb="stream" data-cap="Live view" title="Open large live view"><img src="/live/stream" alt="Live camera feed"></a></div>
+<div hx-get="/partials/status" hx-trigger="every 5s" hx-swap="innerHTML">{% include "_status.html" %}</div>
+{% endblock %}

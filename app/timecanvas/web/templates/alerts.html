@@ -1,0 +1,72 @@
+{% extends "base.html" %}{% block body %}
+<h1>Alerts</h1>
+<p class="muted">TimeCanvas checks itself every minute. A problem must show up twice in a row before you hear about it, you get a reminder while it lasts, and a message when it recovers. This runs separately from capture, so it still reports when capture stops.</p>
+
+<h2>Right now</h2>
+<table><tr><th>Check</th><th>Status</th><th>Details</th></tr>
+{% for k,(label,what) in rules.items() %}{% set st = states.get(k) %}
+<tr><td>{{ label }}<br><small class="muted">{{ what }}</small></td>
+<td class="{{ 'crit' if st and st.status == 'open' else 'ok' }}">{% if not s['alert_on_' ~ k] == '1' %}<span class="muted">switched off</span>{% elif st and st.status == 'open' %}<b>Alert</b> since {{ st.opened_utc|local(tz) }}{% else %}OK{% endif %}</td>
+<td>{% if st and st.status == 'open' %}{{ st.detail }}{% endif %}</td></tr>{% endfor %}</table>
+
+<form method="post" action="/alerts/settings" autocomplete="off"><input type="hidden" name="csrf" value="{{ csrf }}">
+<h2>What to watch</h2>
+<div class="card col">
+<label class="inline"><input type="checkbox" name="alerts_enabled" {{ 'checked' if s.alerts_enabled == '1' }}> Alerts on</label>
+{% for k,(label,what) in rules.items() %}<label class="inline"><input type="checkbox" name="alert_on_{{ k }}" {{ 'checked' if s['alert_on_' ~ k] == '1' }}> {{ label }}: <span class="muted">{{ what }}</span></label>{% endfor %}
+</div>
+<div class="card">
+<label>Alert if no photo for (minutes)<input type="number" name="alert_stale_minutes" value="{{ s.alert_stale_minutes }}" min="{{ ranges.alert_stale_minutes[0] }}" max="{{ ranges.alert_stale_minutes[1] }}"></label>
+<label>Alert if the camera is offline for (minutes)<input type="number" name="alert_offline_minutes" value="{{ s.alert_offline_minutes }}" min="{{ ranges.alert_offline_minutes[0] }}" max="{{ ranges.alert_offline_minutes[1] }}"></label>
+<label>Remind me every (hours)<input type="number" name="alert_remind_hours" value="{{ s.alert_remind_hours }}" min="{{ ranges.alert_remind_hours[0] }}" max="{{ ranges.alert_remind_hours[1] }}"></label>
+</div>
+
+<h2>Microsoft Teams</h2>
+<p class="muted">Create a Power Automate flow that starts with <i>When a Teams webhook request is received</i> and posts the card to you (steps in docs/ALERTS.md). Paste its URL here. It is stored only on the VM, never shown again, and never in backups.</p>
+<div class="card">
+<label class="inline"><input type="checkbox" name="alert_teams_on" {{ 'checked' if s.alert_teams_on == '1' }}> Send to Teams</label>
+<label>Webhook URL <input type="password" name="teams_webhook" size="48" autocomplete="new-password" placeholder="{{ 'saved - leave blank to keep' if has.teams else 'https://....logic.azure.com/...' }}"></label>
+{% if has.teams %}<label class="inline"><input type="checkbox" name="clear_teams"> remove the saved URL</label>{% endif %}
+</div>
+
+<h2>Email</h2>
+<div class="card">
+<label class="inline"><input type="checkbox" name="alert_email_on" {{ 'checked' if s.alert_email_on == '1' }}> Send email</label>
+<label>Send with <select name="alert_email_method"><option value="postal" {{ 'selected' if s.alert_email_method == 'postal' }}>Postal (HTTP API)</option><option value="smtp" {{ 'selected' if s.alert_email_method == 'smtp' }}>SMTP</option></select></label>
+<label>From <input name="alert_mail_from" value="{{ s.alert_mail_from }}" placeholder="timecanvas@example.com"></label>
+<label>To (up to 5, comma separated) <input name="alert_mail_to" value="{{ s.alert_mail_to }}" size="40"></label>
+</div>
+<p class="muted"><b>Postal:</b> the server URL and a server API key (Postal > your server > Credentials > API). The From address must belong to a domain verified on that Postal server.</p>
+<div class="card">
+<label>Postal server <input name="alert_postal_url" value="{{ s.alert_postal_url }}" placeholder="https://app.example.com" size="34"></label>
+<label>API key <input type="password" name="postal_api_key" size="34" autocomplete="new-password" placeholder="{{ 'saved - leave blank to keep' if has.postal else '' }}"></label>
+{% if has.postal %}<label class="inline"><input type="checkbox" name="clear_postal"> remove the saved key</label>{% endif %}
+</div>
+<p class="muted"><b>SMTP</b> (only used when "Send with" is SMTP):</p>
+<div class="card">
+<label>Mail server <input name="alert_smtp_host" value="{{ s.alert_smtp_host }}" placeholder="smtp.example.com" maxlength="253"></label>
+<label>Port <input type="number" name="alert_smtp_port" value="{{ s.alert_smtp_port }}" min="1" max="65535"></label>
+<label>Security <select name="alert_smtp_security">{% for v,l in [('starttls','STARTTLS (587)'),('ssl','SSL/TLS (465)'),('none','none (25, no login)')] %}<option value="{{ v }}" {{ 'selected' if s.alert_smtp_security == v }}>{{ l }}</option>{% endfor %}</select></label>
+<label>User <input name="alert_smtp_user" value="{{ s.alert_smtp_user }}" autocomplete="off"></label>
+<label>Password <input type="password" name="smtp_password" autocomplete="new-password" placeholder="{{ 'saved - leave blank to keep' if has.smtp else '' }}"></label>
+{% if has.smtp %}<label class="inline"><input type="checkbox" name="clear_smtp"> remove the saved password</label>{% endif %}
+</div>
+
+<h2>Heartbeat (optional)</h2>
+<p class="muted">If the whole VM or its host goes down nothing inside it can alert you. Give a monitoring service a push/ping URL and TimeCanvas calls it every minute; that service messages you when the calls <b>stop</b>. Works with healthchecks.io or Uptime Kuma (a <i>Push</i> monitor, for example <code>http://100.x.x.x:3001/api/push/&lt;token&gt;?status=up&amp;msg=OK</code>, including on your tailnet).</p>
+<div class="card">
+<label>Ping URL <input type="password" name="heartbeat_url" size="48" autocomplete="new-password" placeholder="{{ 'saved - leave blank to keep' if has.hb else 'http(s)://... push URL' }}"></label>
+{% if has.hb %}<label class="inline"><input type="checkbox" name="clear_hb"> remove the saved URL</label>{% endif %}
+</div>
+<button>Save</button>
+</form>
+<h2>Test</h2>
+<form method="post" action="/alerts/test" class="card"><input type="hidden" name="csrf" value="{{ csrf }}">
+<button name="channel" value="teams">Test Teams</button><button name="channel" value="email">Test email</button><button name="channel" value="heartbeat">Test heartbeat</button><button name="channel" value="all">Test everything switched on</button>
+<span class="muted">Each button tests that channel on its own, using what is <b>saved</b> (press Save first). A channel can be tested before you switch it on.</span></form>
+
+<h2>Recent messages</h2>
+<table><tr><th>When ({{ tz }})</th><th>Check</th><th>Event</th><th>Channel</th><th>Result</th></tr>
+{% for l in log %}<tr><td>{{ l.ts_utc|local(tz) }}</td><td>{{ rules.get(l.key, (l.key,))[0] }}</td><td>{{ l.event }}</td><td>{{ l.channel }}</td><td class="{{ 'ok' if l.ok else 'crit' }}">{{ 'delivered' if l.ok else 'failed' }}{% if l.error %}<br><small>{{ l.error }}</small>{% endif %}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No messages yet.</td></tr>{% endfor %}</table>
+{% endblock %}

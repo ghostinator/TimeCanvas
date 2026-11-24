@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block body %}
+<h1>Play a time range</h1>
+<form id="range" class="filters card"><label>Start <input type="datetime-local" id="pstart" value="{{ start }}"></label><label>End <input type="datetime-local" id="pend" value="{{ end }}"></label>
+<label>Use every <select id="pstep"><option value="1">frame</option><option value="2">2nd</option><option value="5">5th</option><option value="10">10th</option><option value="30">30th</option></select></label>
+<button type="submit">Load</button><span id="pinfo" class="muted"></span></form>
+<div class="player" id="player" data-cap="{{ cap }}" hidden>
+<img id="pimg" alt="frame"><div class="muted" id="pstamp"></div>
+<div class="muted" id="pbuf" hidden><progress id="pload" max="1" value="0"></progress> <span id="pbuftxt"></span></div>
+<div class="ctl"><button type="button" id="pplay">▶ Play</button><input type="range" id="pseek" min="0" max="0" value="0">
+<label>Speed <select id="pfps"><option>2</option><option>5</option><option>10</option><option selected>15</option><option>30</option><option>60</option></select> fps</label>
+<label><input type="checkbox" id="ploop" checked> loop</label></div></div>
+<form method="post" action="/renders" class="filters card" id="saveform" hidden><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="kind" value="custom">
+<input type="hidden" name="start" id="sstart"><input type="hidden" name="end" id="send"><input type="hidden" name="fps" id="sfps" value="15"><input type="hidden" name="crf" value="23"><input type="hidden" name="preset" value="medium">
+<strong>Save this range:</strong><label>as <select name="format"><option value="mp4">MP4 video</option><option value="webp">animated WebP</option></select></label>
+<label><input type="checkbox" name="overlay"> timestamp overlay</label><button>Render it</button><span class="muted">uses the speed above as the frame rate; every frame in the range is included</span></form>
+<script src="/static/play.js"></script>
+{% endblock %}

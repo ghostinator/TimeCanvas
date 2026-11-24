@@ -1,0 +1,18 @@
+#!/usr/sbin/nft -f
+# TimeCanvas VM firewall. Inbound default-deny; HTTPS/HTTP/SSH only from the LAN and the owner's Mac (tailnet IP).
+# LAN CIDR 192.168.1.0/24 observed in preflight; Mac tailnet IP supplied by the owner. Edit here (repo), redeploy.
+table inet timecanvas
+flush table inet timecanvas
+table inet timecanvas {
+  set allowed_v4 { type ipv4_addr; flags interval; elements = { 192.168.1.0/24, 100.96.238.91 } }
+  chain input {
+    type filter hook input priority 0; policy drop;
+    iif lo accept
+    ct state established,related accept
+    ct state invalid drop
+    meta l4proto { icmp, ipv6-icmp } accept
+    udp sport 67 udp dport 68 accept                 # DHCPv4 replies
+    ip6 nexthdr udp udp dport 546 accept             # DHCPv6 replies
+    ip saddr @allowed_v4 tcp dport { 22, 80, 443 } ct state new accept
+  }
+}
